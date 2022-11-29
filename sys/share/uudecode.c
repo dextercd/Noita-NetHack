@@ -132,7 +132,7 @@ main(int argc, char **argv)
         char *sl;
         struct passwd *getpwnam();
         struct passwd *user;
-        char dnbuf[100], *index(), *strcat(), *strcpy();
+        char dnbuf[100];
 
         sl = strchr(dest, '/');
         if (sl == NULL) {
@@ -234,25 +234,3 @@ outdec(char *p, FILE *f, int n)
     if (n >= 3)
         putc(c3, f);
 }
-
-#if !defined(MSDOS) && !defined(VMS) && !defined(WIN32)
-/*
- * Return the ptr in sp at which the character c appears;
- * NULL if not found
- */
-
-#ifndef NULL
-#define NULL 0
-#endif
-
-char *
-index(sp, c)
-register char *sp, c;
-{
-    do {
-        if (*sp == c)
-            return (sp);
-    } while (*sp++);
-    return (NULL);
-}
-#endif
