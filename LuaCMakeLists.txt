@@ -33,6 +33,13 @@ add_library(liblua
     src/linit.c
 )
 
+target_include_directories(liblua PUBLIC src)
+
+if (UNIX)
+    target_link_libraries(liblua PRIVATE m)
+endif()
+
+
 add_executable(lua src/lua.c)
 target_link_libraries(lua PRIVATE liblua)
 
