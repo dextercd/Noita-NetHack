@@ -11,7 +11,6 @@
 #include <ctype.h>
 #include <sys/stat.h>
 #include <signal.h>
-#include <pwd.h>
 #ifndef O_RDONLY
 #include <fcntl.h>
 #endif
@@ -51,7 +50,6 @@ extern void init_linux_cons(void);
 
 static void wd_message(void);
 static boolean wiz_error_flag = FALSE;
-static struct passwd *get_unix_pw(void);
 
 #ifdef __EMSCRIPTEN__
 /* if WebAssembly, export this API and don't optimize it out */
@@ -592,14 +590,7 @@ port_help(void)
 boolean
 authorize_wizard_mode(void)
 {
-    struct passwd *pw = get_unix_pw();
-
-    if (pw && sysopt.wizards && sysopt.wizards[0]) {
-        if (check_user_string(sysopt.wizards))
-            return TRUE;
-    }
-    wiz_error_flag = TRUE; /* not being allowed into wizard mode */
-    return FALSE;
+    return TRUE;
 }
 
 static void
@@ -640,81 +631,13 @@ append_slash(char *name)
 boolean
 check_user_string(const char *optstr)
 {
-    struct passwd *pw;
-    int pwlen;
-    const char *eop, *w;
-    char *pwname = 0;
-
-    if (optstr[0] == '*')
-        return TRUE; /* allow any user */
-    if (sysopt.check_plname)
-        pwname = g.plname;
-    else if ((pw = get_unix_pw()) != 0)
-        pwname = pw->pw_name;
-    if (!pwname || !*pwname)
-        return FALSE;
-    pwlen = (int) strlen(pwname);
-    eop = eos((char *)optstr);
-    w = optstr;
-    while (w + pwlen <= eop) {
-        if (!*w)
-            break;
-        if (isspace(*w)) {
-            w++;
-            continue;
-        }
-        if (!strncmp(w, pwname, pwlen)) {
-            if (!w[pwlen] || isspace(w[pwlen]))
-                return TRUE;
-        }
-        while (*w && !isspace(*w))
-            w++;
-    }
-    return FALSE;
-}
-
-static struct passwd *
-get_unix_pw(void)
-{
-    char *user;
-    unsigned uid;
-    static struct passwd *pw = (struct passwd *) 0;
-
-    if (pw)
-        return pw; /* cache answer */
-
-    uid = (unsigned) getuid();
-    user = getlogin();
-    if (user) {
-        pw = getpwnam(user);
-        if (pw && ((unsigned) pw->pw_uid != uid))
-            pw = 0;
-    }
-    if (pw == 0) {
-        user = nh_getenv("USER");
-        if (user) {
-            pw = getpwnam(user);
-            if (pw && ((unsigned) pw->pw_uid != uid))
-                pw = 0;
-        }
-        if (pw == 0) {
-            pw = getpwuid(uid);
-        }
-    }
-    return pw;
+    return TRUE;
 }
 
 char *
 get_login_name(void)
 {
-    static char buf[BUFSZ];
-    struct passwd *pw = get_unix_pw();
-
-    buf[0] = '\0';
-    if (pw)
-        (void)strcpy(buf, pw->pw_name);
-
-    return buf;
+    return (char*)"player";
 }
 
 unsigned long
