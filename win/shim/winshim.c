@@ -191,11 +191,11 @@ shim_ctrl_nhwindow(
     return (win_request_info *) 0;
 }
 #else /* !__EMSCRIPTEN__ */
-VDECLCB(shim_update_inventory,(int a1 UNUSED)
-DECLB(win_request_info *, shim_ctrl_nhwindow,
+VDECLCB(shim_update_inventory,(int a1 UNUSED), "vi")
+DECLCB(win_request_info *, shim_ctrl_nhwindow,
     (winid window, int request, win_request_info *wri),
     "viip",
-    A2P window UNUSED, A2P request UNUSED, P2V wri UNUSED)
+    A2P window, A2P request, P2V wri)
 #endif
 
 /* Interface definition used in windows.c */
