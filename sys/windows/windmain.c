@@ -1290,16 +1290,10 @@ int
 tty_self_recover_prompt(void)
 {
     register int c, ci, ct, pl, retval = 0;
-    /* for saving/replacing functions, if needed */
-    struct window_procs saved_procs = {0};
 
     pl = 1;
     c = 'n';
     ct = 0;
-    saved_procs = windowprocs;
-    if (!WINDOWPORT(safestartup))
-        windowprocs = *get_safe_procs(2); /* arg 2 uses no-newline variant */
-    windowprocs.win_nhgetch = windows_console_custom_nhgetch;
     raw_print("\n");
     raw_print("\n");
     raw_print("\n");
@@ -1345,10 +1339,6 @@ tty_self_recover_prompt(void)
             retval = -1;  /* yes, do destroy the old game anyway */
         else
             retval = 1;   /* yes, do recover the old game */
-    }
-    if (saved_procs.name[0]) {
-        windowprocs = saved_procs;
-        //raw_clear_screen();
     }
     return retval;
 }
