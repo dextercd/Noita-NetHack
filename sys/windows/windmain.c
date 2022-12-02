@@ -25,8 +25,6 @@ static void nhusage(void);
 static char *get_executable_path(void);
 char *translate_path_variables(const char *, char *);
 char *exename(void);
-boolean fakeconsole(void);
-void freefakeconsole(void);
 extern void nethack_exit(int) NORETURN;
 #if defined(MSWIN_GRAPHICS)
 extern void mswin_destroy_reg(void);
@@ -960,42 +958,6 @@ exename(void)
         *tmp2 = '\0';
     tmp2++;
     return tmp2;
-}
-
-boolean
-fakeconsole(void)
-{
-    if (!hStdOut) {
-        HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-
-        if (!hStdOut && !hStdIn) {
-            /* Bool rval; */
-            AllocConsole();
-            AttachConsole(GetCurrentProcessId());
-            /*  rval = SetStdHandle(STD_OUTPUT_HANDLE, hWrite); */
-            freopen("CON", "w", stdout);
-            freopen("CON", "r", stdin);
-        }
-        has_fakeconsole = TRUE;
-    }
-    
-    /* Obtain handles for the standard Console I/O devices */
-    hConIn = GetStdHandle(STD_INPUT_HANDLE);
-    hConOut = GetStdHandle(STD_OUTPUT_HANDLE);
-#if 0
-    if (!SetConsoleCtrlHandler((PHANDLER_ROUTINE) CtrlHandler, TRUE)) {
-        /* Unable to set control handler */
-        cmode = 0; /* just to have a statement to break on for debugger */
-    }
-#endif
-    return has_fakeconsole;
-}
-void freefakeconsole(void)
-{
-    if (has_fakeconsole) {
-        FreeConsole();
-    }
 }
 #endif
 
