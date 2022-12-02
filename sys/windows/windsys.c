@@ -466,10 +466,8 @@ nethack_exit(int code)
 int
 windows_console_custom_nhgetch(void)
 {
-    return _getch();
+    return tgetch();
 }
-
-extern int windows_console_custom_nhgetch(void);
 
 void
 getreturn(const char *str)
