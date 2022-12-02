@@ -43,7 +43,58 @@ add_executable(uudecode sys/share/uudecode.c)
 target_include_directories(uudecode PRIVATE include)
 
 
-add_library(libnethack
+# makedefs
+add_executable(makedefs
+    util/makedefs.c
+    src/monst.c
+    src/objects.c
+    src/date.c
+    $<TARGET_OBJECTS:alloc>
+)
+target_include_directories(makedefs PRIVATE include)
+target_link_libraries(makedefs PRIVATE liblua)
+
+
+# files built with makedefs
+function(makedef_command)
+    set(noValues)
+    set(singleValues FLAG)
+    set(multiValues OUTPUT DEPENDS)
+    cmake_parse_arguments(
+        MD
+        "${noValues}"
+        "${singleValues}"
+        "${multiValues}"
+        ${ARGN}
+    )
+
+    add_custom_command(OUTPUT ${MD_OUTPUT}
+        DEPENDS makedefs ${MD_DEPENDS}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dat
+        VERBATIM
+        COMMAND makedefs ${MD_FLAG}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MD_OUTPUT} ${CMAKE_CURRENT_BINARY_DIR}
+    )
+endfunction()
+
+makedef_command(OUTPUT data FLAG -d DEPENDS dat/data.base)
+makedef_command(OUTPUT rumors FLAG -r DEPENDS dat/rumors.fal dat/rumors.tru)
+makedef_command(OUTPUT oracles FLAG -h DEPENDS dat/oracles.txt)
+makedef_command(
+    OUTPUT engrave epitaph bogusmon
+    FLAG -s
+    DEPENDS
+        dat/engrave.txt
+        dat/epitaph.txt
+        dat/bogusmon.txt
+)
+makedef_command(OUTPUT options FLAG -v)
+
+add_custom_target(makedef_files ALL
+    DEPENDS data rumors oracles engrave epitaph bogusmon options
+)
+
+add_executable(nethack
     src/allmain.c
     src/apply.c
     src/artifact.c
@@ -160,28 +211,85 @@ add_library(libnethack
     src/write.c
     src/zap.c
     src/alloc.c
-
     sys/share/cppregex.cpp
-    sys/libnh/libnhmain.c
 
-    win/shim/winshim.c
+    sys/unix/unixres.c
+
+    win/tty/topl.c
+    win/tty/wintty.c
+    win/tty/termcap.c
+    win/tty/getline.c
+    sys/share/tclib.c
+    sys/share/fixup.c
 )
 
 if (WIN32)
-    # target_sources(libnethack)
+    target_sources(nethack PRIVATE
+        sys/windows/windmain.c
+        sys/windows/windsys.c
+        sys/windows/stubs.c
+        win/share/safeproc.c
+    )
+    target_compile_definitions(nethack
+        PRIVATE SAFEPROCS
+    )
+    target_link_libraries(nethack PRIVATE Bcrypt.lib)
 else()
-    target_sources(libnethack
-        PRIVATE
-            sys/share/unixtty.c
-            sys/share/ioctl.c
-            sys/unix/unixunix.c
+    target_sources(nethack PRIVATE
+        sys/share/ioctl.c
+        sys/unix/unixmain.c
+        sys/unix/unixunix.c
+        sys/share/unixtty.c
     )
 endif()
 
-target_include_directories(libnethack PRIVATE include)
-target_link_libraries(libnethack PRIVATE liblua)
-target_compile_definitions(libnethack
+target_include_directories(nethack PRIVATE include)
+target_link_libraries(nethack PRIVATE liblua)
+
+target_compile_definitions(nethack
     PRIVATE
-        SHIM_GRAPHICS
-        NOTTYGRAPHICS
+        ANSI_DEFAULT
+        TIMED_DELAY
+        NO_TILE_C
+)
+
+#find_package(Curses REQUIRED)
+
+#target_link_libraries(nethack PRIVATE ${CURSES_LIBRARIES})
+#target_include_directories(nethack PRIVATE ${CURSES_INCLUDE_DIRS})
+#target_compile_options(nethack PRIVATE ${CURSES_CFLAGS})
+
+install(TARGETS nethack
+    DESTINATION .
+)
+
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty "")
+
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/empty"
+    DESTINATION .
+    RENAME perm
+)
+
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/empty
+    DESTINATION .
+    RENAME record
+)
+
+install(
+    DIRECTORY dat/
+    DESTINATION .
+)
+
+install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/data
+        ${CMAKE_CURRENT_BINARY_DIR}/rumors
+        ${CMAKE_CURRENT_BINARY_DIR}/oracles
+        ${CMAKE_CURRENT_BINARY_DIR}/engrave
+        ${CMAKE_CURRENT_BINARY_DIR}/epitaph
+        ${CMAKE_CURRENT_BINARY_DIR}/bogusmon
+        ${CMAKE_CURRENT_BINARY_DIR}/options
+    DESTINATION .
 )
