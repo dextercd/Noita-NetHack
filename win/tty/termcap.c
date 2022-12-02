@@ -5,11 +5,12 @@
 
 #include "hack.h"
 
-#if defined(TTY_GRAPHICS) && !defined(NO_TERMS)
+#if defined(TTY_GRAPHICS)
 
 #include "wintty.h"
 #include "tcap.h"
 
+char *tgetstr(const char *, char **);
 #define Tgetstr(key) (tgetstr(key, &tbufptr))
 
 static char *s_atr2str(int);
@@ -60,15 +61,6 @@ static char nullstr[] = "";
 extern boolean HE_resets_AS;
 #endif
 
-#ifndef TERMLIB
-static char tgotobuf[20];
-#ifdef TOS
-#define tgoto(fmt, x, y) (Sprintf(tgotobuf, fmt, y + ' ', x + ' '), tgotobuf)
-#else
-#define tgoto(fmt, x, y) (Sprintf(tgotobuf, fmt, y + 1, x + 1), tgotobuf)
-#endif
-#endif /* TERMLIB */
-
 /* these don't need to be part of 'struct instance_globals g' */
 static char tty_standout_on[16], tty_standout_off[16];
 
@@ -76,20 +68,20 @@ void
 tty_startup(int *wid, int *hgt)
 {
 #ifdef TERMLIB
-    register const char *term;
+    register const char *term = "ansi";
     register char *tptr;
     char *tbufptr, *pc;
     int i;
 
 #ifdef VMS
-    term = verify_termcap();
-    if (!term)
+    //term = verify_termcap();
+    //if (!term)
 #endif
-        term = getenv("TERM");
+        //term = getenv("TERM");
 
 #if defined(TOS) && defined(__GNUC__)
-    if (!term)
-        term = "builtin"; /* library has a default */
+    //if (!term)
+        //term = "builtin"; /* library has a default */
 #endif
     if (!term)
 #endif /* TERMLIB */
@@ -177,13 +169,6 @@ tty_startup(int *wid, int *hgt)
     tbufptr = tbuf;
     if (!strncmp(term, "5620", 4))
         flags.null = FALSE; /* this should be a termcap flag */
-    if (tgetent(tptr, term) < 1) {
-        char buf[BUFSZ];
-        (void) strncpy(buf, term,
-                       (BUFSZ - 1) - (sizeof("Unknown terminal type: .  ")));
-        buf[BUFSZ - 1] = '\0';
-        error("Unknown terminal type: %s.", term);
-    }
     if ((pc = Tgetstr("pc")) != 0)
         PC = *pc;
 
@@ -558,10 +543,12 @@ nocmov(int x, int y)
     }
 }
 
+char *tgoto(const char *, int, int);
 void
 cmov(register int x, register int y)
 {
-    xputs(tgoto(nh_CM, x, y));
+    char* instruction = tgoto(nh_CM, x, y);
+    xputs(instruction);
     ttyDisplay->cury = y;
     ttyDisplay->curx = x;
 }
@@ -742,48 +729,7 @@ static const short tmspc10[] = { /* from termcap */
 void
 tty_delay_output(void)
 {
-#if defined(MICRO)
-    register int i;
-#endif
-    if (iflags.debug_fuzzer)
-        return;
-#ifdef TIMED_DELAY
-    if (flags.nap) {
-        (void) fflush(stdout);
-        msleep(50); /* sleep for 50 milliseconds */
-        return;
-    }
-#endif
-#if defined(MICRO)
-    /* simulate the delay with "cursor here" */
-    for (i = 0; i < 3; i++) {
-        cmov(ttyDisplay->curx, ttyDisplay->cury);
-        (void) fflush(stdout);
-    }
-#else /* MICRO */
-    /* BUG: if the padding character is visible, as it is on the 5620
-       then this looks terrible. */
-    if (flags.null) {
-        tputs(
-#ifdef TERMINFO
-              "$<50>",
-#else
-              "50",
-#endif
-              1, xputc);
-
-    } else if (ospeed > 0 && ospeed < SIZE(tmspc10) && nh_CM) {
-        /* delay by sending cm(here) an appropriate number of times */
-        register int cmlen =
-            (int) strlen(tgoto(nh_CM, ttyDisplay->curx, ttyDisplay->cury));
-        register int i = 500 + tmspc10[ospeed] / 2;
-
-        while (i > 0) {
-            cmov((int) ttyDisplay->curx, (int) ttyDisplay->cury);
-            i -= cmlen * tmspc10[ospeed];
-        }
-    }
-#endif /* MICRO */
+    return;
 }
 
 /* must only be called with curx = 1 */
@@ -897,8 +843,7 @@ init_hilite(void)
     iflags.colorcount = colors;
     int md_len = 0;
 
-    if (colors < 8 || (MD == NULL) || (strlen(MD) == 0)
-        || ((setf = tgetstr("AF", (char **) 0)) == (char *) 0
+    if (colors < 8 || ((setf = tgetstr("AF", (char **) 0)) == (char *) 0
             && (setf = tgetstr("Sf", (char **) 0)) == (char *) 0)) {
         /* Fallback when colors not available
          * It's arbitrary to collapse all colors except gray
@@ -923,70 +868,27 @@ init_hilite(void)
         return;
     }
 
-    if (colors >= 16) {
-        for (c = 0; c < SIZE(ti_map); c++) {
-            char *work;
-
-            /* system colors */
-            scratch = tparm(setf, ti_map[c].nh_color);
-            work = (char *) alloc(strlen(scratch) + 1);
-            Strcpy(work, scratch);
-            hilites[ti_map[c].nh_color] = work;
-
-            /* bright colors */
-            scratch = tparm(setf, ti_map[c].nh_bright_color);
-            work = (char *) alloc(strlen(scratch) + 1);
-            Strcpy(work, scratch);
-            hilites[ti_map[c].nh_bright_color] = work;
-        }
-    } else {
-        /* 8 system colors */
-        md_len = strlen(MD);
-
-        c = 6;
-        while (c--) {
-            char *work;
-
-            scratch = tparm(setf, ti_map[c].ti_color);
-            work = (char *) alloc(strlen(scratch) + md_len + 1);
-            Strcpy(work, MD);
-            hilites[ti_map[c].nh_bright_color] = work;
-            work += md_len;
-            Strcpy(work, scratch);
-            hilites[ti_map[c].nh_color] = work;
-        }
+    for (c = 0; c < SIZE(ti_map); c++) {
+        int col_num = ti_map[c].nh_color;
+        char scratch[] = "\x1b[3_m";
+        scratch[3] = '0' + col_num;
+        char* work = (char*)alloc(strlen(scratch) + 1);
+        Strcpy(work, scratch);
+        hilites[ti_map[c].nh_color] = work;
+        hilites[ti_map[c].nh_bright_color] = work;
     }
 
-    if (colors >= 16) {
-        scratch = tparm(setf, COLOR_WHITE|BRIGHT);
-        hilites[CLR_WHITE] = (char *) alloc(strlen(scratch) + 1);
-        Strcpy(hilites[CLR_WHITE], scratch);
-    } else {
-        scratch = tparm(setf, COLOR_WHITE);
-        hilites[CLR_WHITE] = (char *) alloc(strlen(scratch) + md_len + 1);
-        Strcpy(hilites[CLR_WHITE], MD);
-        Strcat(hilites[CLR_WHITE], scratch);
-    }
+    //scratch = tparm(setf, COLOR_WHITE|BRIGHT);
+    //hilites[CLR_WHITE] = (char *) alloc(strlen(scratch) + 1);
+    //Strcpy(hilites[CLR_WHITE], scratch);
 
     hilites[CLR_GRAY] = nilstring;
     hilites[NO_COLOR] = nilstring;
 
     if (iflags.wc2_darkgray) {
-        if (colors >= 16) {
-            scratch = tparm(setf, COLOR_BLACK|BRIGHT);
-            hilites[CLR_BLACK] = (char *) alloc(strlen(scratch) + 1);
-            Strcpy(hilites[CLR_BLACK], scratch);
-        } else {
-            /* On many terminals, esp. those using classic PC CGA/EGA/VGA
-            * textmode, specifying "hilight" and "black" simultaneously
-            * produces a dark shade of gray that is visible against a
-            * black background.  We can use it to represent black objects.
-            */
-            scratch = tparm(setf, COLOR_BLACK);
-            hilites[CLR_BLACK] = (char *) alloc(strlen(scratch) + md_len + 1);
-            Strcpy(hilites[CLR_BLACK], MD);
-            Strcat(hilites[CLR_BLACK], scratch);
-        }
+        //scratch = tparm(setf, COLOR_BLACK|BRIGHT);
+        //hilites[CLR_BLACK] = (char *) alloc(strlen(scratch) + 1);
+        //Strcpy(hilites[CLR_BLACK], scratch);
     } else {
         /* But it's concievable that hilighted black-on-black could
          * still be invisible on many others.  We substitute blue for

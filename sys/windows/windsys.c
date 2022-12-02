@@ -205,7 +205,7 @@ VA_DECL(const char *, s)
         buf[0] = '\n';
         (void) vsnprintf(&buf[1], sizeof buf - (1 + sizeof "\n"), s, VA_ARGS);
         Strcat(buf, "\n");
-        msmsg(buf);
+        printf(buf);
     } else {
         (void) vsnprintf(buf, sizeof buf - sizeof "\n", s, VA_ARGS);
         Strcat(buf, "\n");
@@ -295,7 +295,7 @@ void
 interject(int interjection_type)
 {
     if (interjection_type >= 0 && interjection_type < INTERJECTION_TYPES)
-        msmsg(interjection_buf[interjection_type]);
+        printf(interjection_buf[interjection_type]);
 }
 
 #ifdef RUNTIME_PASTEBUF_SUPPORT

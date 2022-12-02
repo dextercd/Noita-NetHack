@@ -80,6 +80,8 @@ extern int GUILaunched;
 HANDLE hStdOut;
 #if defined(MSWIN_GRAPHICS)
 char default_window_sys[] = "mswin";
+#else
+char default_window_sys[] = "tty";
 #endif
 #ifdef WANT_GETHDATE
 static struct stat hbuf;
@@ -560,9 +562,6 @@ _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);*/
         consoletty_open(1);
 
     init_nhwindows(&argc, argv);
-
-    if (WINDOWPORT(tty))
-        toggle_mouse_support();
 
     if (g.symset[PRIMARYSET].handling
         && !symset_is_compatible(g.symset[PRIMARYSET].handling,
@@ -1387,7 +1386,7 @@ tty_self_recover_prompt(void)
     }
     if (saved_procs.name[0]) {
         windowprocs = saved_procs;
-        raw_clear_screen();
+        //raw_clear_screen();
     }
     return retval;
 }

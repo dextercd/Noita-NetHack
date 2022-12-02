@@ -480,9 +480,6 @@ tty_init_nhwindows(int *argcp UNUSED, char **argv UNUSED)
      *  tty_startup() must be called before initoptions()
      *    due to ordering of graphics settings
      */
-#if defined(UNIX) || defined(VMS)
-    setbuf(stdout, obuf);
-#endif
     gettty();
 
     /* to port dependant tty setup */
@@ -556,7 +553,7 @@ tty_preference_update(const char *pref)
     }
 
 #if defined(WIN32)
-    consoletty_preference_update(pref);
+    //consoletty_preference_update(pref);
 #else
     genl_preference_update(pref);
 #endif
@@ -1532,7 +1529,7 @@ tty_exit_nhwindows(const char *str)
     tty_shutdown(); /* cleanup termcap/terminfo/whatever */
 #endif
 #ifdef WIN32
-    consoletty_exit();
+    //consoletty_exit();
 #endif
     iflags.window_inited = 0;
 }
@@ -4085,7 +4082,6 @@ end_glyphout(void)
 #endif
 }
 
-#ifndef WIN32
 void
 g_putch(int in_ch)
 {
@@ -4125,9 +4121,8 @@ g_putch(int in_ch)
 
     return;
 }
-#endif /* !WIN32 */
 
-#if defined(ENHANCED_SYMBOLS) && defined(UNIX)
+#if defined(ENHANCED_SYMBOLS)
 void
 g_pututf8(uint8 *utf8str)
 {
@@ -4138,7 +4133,7 @@ g_pututf8(uint8 *utf8str)
     }
     return;
 }
-#endif /* ENHANCED_SYMBOLS && UNIX */
+#endif /* ENHANCED_SYMBOLS */
 
 #ifdef CLIPPING
 void

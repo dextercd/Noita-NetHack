@@ -30,7 +30,38 @@ char *tparam(const char *, char *, int, int, int, int, int);
 void tputs(const char *, int, int (*)(int));
 
 /* local support data */
-static char *tc_entry;
+static char tc_entry[] =
+":am:bs:km:mi:ms:xn:"
+":co#80:it#8:li#24:"
+":AL=\\E[%dL:DC=\\E[%dP:DL=\\E[%dM:DO=\\E[%dB:IC=\\E[%d@:"
+":K1=\\EOw:K2=\\EOy:K3=\\EOu:K4=\\EOq:K5=\\EOs:LE=\\E[%dD:"
+":RI=\\E[%dC:UP=\\E[%dA:ae=^O:al=\\E[L:as=^N:bl=^G:bt=\\E[Z:"
+":cd=\\E[J:ce=\\E[K:cl=\\E[H\\E[2J:cm=\\E[%i%d;%dH:cr=^M:"
+":cs=\\E[%i%d;%dr:ct=\\E[3g:dc=\\E[P:dl=\\E[M:do=^J:ec=\\E[%dX:"
+":ei=\\E[4l:ho=\\E[H:ic=\\E[@:im=\\E[4h:"
+":is=\\E7\\E[r\\E[m\\E[?7h\\E[?1;3;4;6l\\E[4l\\E8\\E>:"
+":k1=\\E[11~:k2=\\E[12~:k3=\\E[13~:k4=\\E[14~:k5=\\E[15~:"
+":k6=\\E[17~:k7=\\E[18~:k8=\\E[19~:k9=\\E[20~:kD=\\177:kI=\\E[2~:"
+":kN=\\E[6~:kP=\\E[5~:kb=^H:kd=\\EOB:ke=\\E[?1l\\E>:kh=\\EOH:"
+":kl=\\EOD:kr=\\EOC:ks=\\E[?1h\\E=:ku=\\EOA:le=^H:md=\\E[1m:"
+":me=\\E[m\\017:mr=\\E[7m:nd=\\E[C:rc=\\E8:sc=\\E7:se=\\E[27m:"
+":sf=^J:so=\\E[7m:sr=\\EM:st=\\EH:ta=^I:te=\\E[2J\\E[?47l\\E8:"
+":ti=\\E7\\E[?47h:ue=\\E[24m:up=\\E[A:us=\\E[4m:"
+":vb=\\E[?5h\\E[?5l:ve=\\E[?25h:vi=\\E[?25l:vs=\\E[?25h:"
+":k1=\\EOP:k2=\\EOQ:k3=\\EOR:k4=\\EOS:"
+":5i:"
+":*6@:@0@:@7=\\E[4~:ei=:ic@:im=:is=\\E[\\041p\\E[?3;4l\\E[4l\\E>:"
+":kD=\\E[3~:kh=\\E[1~:mb=\\E[5m:mk=\\E[8m:pf=\\E[4i:po=\\E[5i:"
+":ps=\\E[i:r1=\\Ec:r2=\\E[\\041p\\E[?3;4l\\E[4l\\E>:"
+":..sa=\\E[0%?%p1%p6%|%t;1%;%?%p2%t;4%;%?%p1%p3%|%t;7%;%?%p4%t;5%;%?%p7%t;8%;m%?%p9%t\\016%e\\017%;:"
+":te=\\E[?1047l\\E[?1048l:ti=\\E[?1048h\\E[?1047h:"
+":@7=\\EOF:K1=\\EOH:K2=\\EOE:K3=\\E[5~:K4=\\EOF:K5=\\E[6~:kD=\\177:"
+":kh=\\EOH:te=\\E[?1049l:ti=\\E[?1049h:"
+":Co#16:NC#32:pa#256:"
+":AB=\\E[4%p1%dm:AF=\\E[3%p1%dm:"
+":..Sb=%p1%{8}%/%{6}%*%{4}%+\\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m:"
+":..Sf=%p1%{8}%/%{6}%*%{3}%+\\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m:";
+
 static char bc_up_buf[24];
 #ifndef NO_DELAY_PADDING
 /* `ospeed' to baud rate conversion table, adapted from GNU termcap-1.2 */
@@ -57,81 +88,6 @@ static const char *tc_field(const char *, const char **);
 #ifndef min
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #endif
-
-/* retrieve the specified terminal entry and return it in `entbuf' */
-int
-tgetent(char *entbuf, /* size must be at least [TCBUFSIZ] */
-        const char *term)
-{
-    int result;
-    FILE *fp;
-    char *tc = getenv("TERMCAP");
-
-    tc_entry = entbuf;
-    if (!entbuf || !term)
-        return -1;
-    /* if ${TERMCAP} is found as a file, it's not an inline termcap entry */
-    if ((fp = fopen(tc ? tc : TERMCAP, "r")) != 0)
-        tc = 0;
-    /* if ${TERMCAP} isn't a file and `term' matches ${TERM}, use ${TERMCAP}
-     */
-    if (tc) {
-        char *tm = getenv("TERM");
-        if (tm && strcmp(tm, term) == 0)
-            return tc_store(term, tc);
-        fp = fopen(TERMCAP, "r");
-    }
-    /* otherwise, look `term' up in the file */
-    if (fp) {
-        char wrkbuf[TCBUFSIZ];
-        tc = tc_find(fp, term, wrkbuf, (int) (sizeof wrkbuf - strlen(term)));
-        result = tc_store(term, tc);
-        (void) fclose(fp);
-    } else {
-        result = -1;
-    }
-    return result;
-}
-
-/* copy the entry into the output buffer */
-static int
-tc_store(const char *trm, const char *ent)
-{
-    const char *bar, *col;
-    char *s;
-    size_t n;
-    int k;
-
-    if (!ent || !*ent || !trm || !*trm || (col = strchr(ent, ':')) == 0)
-        return 0;
-    (void) strcpy(tc_entry, trm);
-    if (((bar = strchr(ent, '|')) != 0 && bar < col)
-        || ((long) (n = strlen(trm)) == (long) (col - ent)
-            && strncmp(ent, trm, n) == 0))
-        (void) strcat(tc_entry, col);
-    else if (*ent == ':')
-        (void) strcat(tc_entry, ent);
-    else
-        (void) strcat(strcat(tc_entry, ":"), ent);
-
-    /* initialize global variables */
-    k = tgetnum("pc");
-    PC = (k == -1) ? '\0' : (char) k;
-    BC = s = bc_up_buf;
-    if (!tgetstr("bc", &s))
-        (void) strcpy(s, "\b"), s += 2;
-    UP = s;
-    (void) tgetstr("up", &s);
-#ifndef NO_DELAY_PADDING
-    /* caller must set `ospeed' */
-    if ((int) ospeed >= (int) SIZE(baud_rates))
-        ospeed = (short) (SIZE(baud_rates) - 1);
-    else if (ospeed < 0)
-        ospeed = 0;
-#endif /* !NO_DELAY_PADDING */
-
-    return 1;
-}
 
 /* search for an entry in the termcap file */
 static char *
@@ -237,6 +193,8 @@ tgetflag(const char *which)
     return (!p || p[2] != ':') ? 0 : 1;
 }
 
+static char dummy_out[100];
+
 /* look up a string entry; update `*outptr' */
 char *
 tgetstr(const char *which, char **outptr)
@@ -244,6 +202,11 @@ tgetstr(const char *which, char **outptr)
     int n;
     char c, *r, *result;
     const char *q, *p = tc_field(which, &q);
+
+    if (outptr == NULL || *outptr == NULL) {
+        char* pdummy_out = dummy_out;
+        outptr = &pdummy_out;
+    }
 
     if (!p || p[2] != '=')
         return (char *) 0;

@@ -529,10 +529,8 @@ extern int tgetflag(const char *);
 extern char *tgetstr(const char *, char **);
 extern char *tgoto(const char *, int, int);
 #else
-#if !(defined(HPUX) && defined(_POSIX_SOURCE))
 extern int tgetent(char *, const char *);
 extern void tputs(const char *, int, int (*)(int));
-#endif
 extern int tgetnum(const char *);
 extern int tgetflag(const char *);
 extern char *tgetstr(const char *, char **);

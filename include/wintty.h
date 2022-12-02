@@ -304,12 +304,12 @@ E int term_puts(const char *str);
 #endif /* MAC */
 #if defined(MSDOS) || defined(WIN32)
 #if defined(SCREEN_BIOS) || defined(SCREEN_DJGPPFAST) || defined(WIN32)
-#undef putchar
-#undef putc
-#undef puts
-#define putchar(x) xputc(x) /* these are in video.c, nttty.c */
-#define putc(x) xputc(x)
-#define puts(x) xputs(x)
+//#undef putchar
+//#undef putc
+//#undef puts
+//#define putchar(x) xputc(x) /* these are in video.c, nttty.c */
+//#define putc(x) xputc(x)
+//#define puts(x) xputs(x)
 #endif /*SCREEN_BIOS || SCREEN_DJGPPFAST || WIN32 */
 #ifdef POSITIONBAR
 E void video_update_positionbar(char *);
