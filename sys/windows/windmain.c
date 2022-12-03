@@ -274,20 +274,20 @@ set_default_prefix_locations(const char *programPath)
         g.fqn_prefix[TROUBLEPREFIX] = portable_device_path;
         g.fqn_prefix[DATAPREFIX]    = executable_path;
     } else {
-        if(!build_known_folder_path(&FOLDERID_Profile, profile_path,
-            sizeof(profile_path), FALSE))
+        //if(!build_known_folder_path(&FOLDERID_Profile, profile_path,
+        //    sizeof(profile_path), FALSE))
             strcpy(profile_path, executable_path);
 
-        if(!build_known_folder_path(&FOLDERID_Profile, versioned_profile_path,
-            sizeof(profile_path), TRUE))
+        //if(!build_known_folder_path(&FOLDERID_Profile, versioned_profile_path,
+        //    sizeof(profile_path), TRUE))
             strcpy(versioned_profile_path, executable_path);
 
-        if(!build_known_folder_path(&FOLDERID_LocalAppData,
-            versioned_user_data_path, sizeof(versioned_user_data_path), TRUE))
+        //if(!build_known_folder_path(&FOLDERID_LocalAppData,
+        //    versioned_user_data_path, sizeof(versioned_user_data_path), TRUE))
             strcpy(versioned_user_data_path, executable_path);
 
-        if(!build_known_folder_path(&FOLDERID_ProgramData,
-            versioned_global_data_path, sizeof(versioned_global_data_path), TRUE))
+        //if(!build_known_folder_path(&FOLDERID_ProgramData,
+        //    versioned_global_data_path, sizeof(versioned_global_data_path), TRUE))
             strcpy(versioned_global_data_path, executable_path);
 
         g.fqn_prefix[SYSCONFPREFIX] = versioned_global_data_path;
