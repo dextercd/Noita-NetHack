@@ -47,11 +47,6 @@ pm.procman_install_poll_event_hook(
     SDL.SDL_GetKeyName
 )
 
-local imgui
-if load_imgui then
-    imgui = load_imgui({version="1.0.0", mod="NoitaDearImGuiExampleMod"})
-end
-
 function capture_input(enable)
     if enable then
         pm.procman_set_capture_input(true)
@@ -141,10 +136,6 @@ function OnWorldPreUpdate()
     pm.procman_read_stdout()
     pm.procman_handle_events()
 
-    if imgui then
-        imgui.SetNextFrameWantCaptureKeyboard(true)
-    end
-
     gui = gui or GuiCreate()
     GuiStartFrame(gui)
 
@@ -157,10 +148,7 @@ function OnWorldPreUpdate()
         terminal_width * mono_width, mono_height * terminal_height
     )
 
-    if GameGetFrameNum() % 10 == 0 then
-        fetch_terminal_changes()
-    end
-
+    fetch_terminal_changes()
     for linenr=1, #lines do
         local line = lines[linenr]
         local y = (linenr - 1) * 9

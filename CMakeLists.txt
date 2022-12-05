@@ -303,8 +303,7 @@ install(TARGETS nethack
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty "")
 
-set(NETHACK_EMPTIES perm record sysconf.template .nethackrc.template
-    Guidebook.txt)
+set(NETHACK_EMPTIES perm record .nethackrc.template)
 foreach(NHEMPTY IN LISTS NETHACK_EMPTIES)
     install(
         FILES "${CMAKE_CURRENT_BINARY_DIR}/empty"
@@ -313,6 +312,13 @@ foreach(NHEMPTY IN LISTS NETHACK_EMPTIES)
         COMPONENT NoitaNetHack
     )
 endforeach()
+
+install(
+    FILES
+        doc/Guidebook.txt sys/windows/sysconf.template
+    DESTINATION ${NETHACK_INSTALL}
+    COMPONENT NoitaNetHack
+)
 
 install(
     DIRECTORY dat/
