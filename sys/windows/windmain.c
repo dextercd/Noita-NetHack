@@ -486,7 +486,10 @@ _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);*/
         getreturn_enabled = TRUE;
 
     check_recordfile((char *) 0);
+
     iflags.windowtype_deferred = TRUE;
+    iflags.cbreak = ON;
+
     copy_sysconf_content();
     initoptions();
 

@@ -290,18 +290,6 @@ E void tty_refresh_inventory(int start, int stop, int y);
 #endif
 
 #ifdef NO_TERMS
-#ifdef MAC
-#ifdef putchar
-#undef putchar
-#undef putc
-#endif
-#define putchar term_putc
-#define fflush term_flush
-#define puts term_puts
-E int term_putc(int c);
-E int term_flush(void *desc);
-E int term_puts(const char *str);
-#endif /* MAC */
 #if defined(MSDOS) || defined(WIN32)
 #if defined(SCREEN_BIOS) || defined(SCREEN_DJGPPFAST) || defined(WIN32)
 //#undef putchar

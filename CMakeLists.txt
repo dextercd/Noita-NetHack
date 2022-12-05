@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.24)
 
 project(NetHack)
 
+set(ROOT "Noita-NetHack")
+set(NETHACK_INSTALL "Noita-NetHack/NetHack")
+
+
 include(FetchContent)
 
 FetchContent_Declare(Lua
@@ -16,6 +20,33 @@ if (NOT lua_POPULATED)
     add_subdirectory(${lua_SOURCE_DIR} ${lua_BINARY_DIR})
 endif()
 
+
+FetchContent_Declare(katerm
+    GIT_REPOSITORY https://github.com/dextercd/katerm.git
+    GIT_TAG 474c06edf5ba1a17be8639c7a2fce32e5e132f96
+)
+FetchContent_MakeAvailable(katerm)
+
+
+FetchContent_Declare(MinHook
+    GIT_REPOSITORY https://github.com/TsudaKageyu/minhook.git
+    GIT_TAG 4a455528f61b5a375b1f9d44e7d296d47f18bb18
+)
+FetchContent_MakeAvailable(MinHook)
+
+
+FetchContent_Declare(luajitminhook
+    URL https://github.com/dextercd/LuaJIT-MinHook/releases/download/release-1.1.1/LuaJIT-MinHook-1.1.1.zip
+)
+FetchContent_MakeAvailable(luajitminhook)
+
+install(DIRECTORY ${luajitminhook_SOURCE_DIR}/
+    DESTINATION ${ROOT}/libs/minhook
+    COMPONENT NoitaNetHack
+)
+
+
+add_subdirectory(noita)
 
 # alloc library
 add_library(alloc OBJECT
@@ -251,6 +282,7 @@ target_compile_definitions(nethack
         ANSI_DEFAULT
         TIMED_DELAY
         NO_TILE_C
+        NO_DELAY_PADDING
 )
 
 #find_package(Curses REQUIRED)
@@ -259,27 +291,33 @@ target_compile_definitions(nethack
 #target_include_directories(nethack PRIVATE ${CURSES_INCLUDE_DIRS})
 #target_compile_options(nethack PRIVATE ${CURSES_CFLAGS})
 
-install(TARGETS nethack
+install(DIRECTORY ${ROOT}
     DESTINATION .
+    COMPONENT NoitaNetHack
+)
+
+install(TARGETS nethack
+    DESTINATION ${NETHACK_INSTALL}
+    COMPONENT NoitaNetHack
 )
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty "")
 
-install(
-    FILES "${CMAKE_CURRENT_BINARY_DIR}/empty"
-    DESTINATION .
-    RENAME perm
-)
-
-install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/empty
-    DESTINATION .
-    RENAME record
-)
+set(NETHACK_EMPTIES perm record sysconf.template .nethackrc.template
+    Guidebook.txt)
+foreach(NHEMPTY IN LISTS NETHACK_EMPTIES)
+    install(
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/empty"
+        DESTINATION ${NETHACK_INSTALL}
+        RENAME ${NHEMPTY}
+        COMPONENT NoitaNetHack
+    )
+endforeach()
 
 install(
     DIRECTORY dat/
-    DESTINATION .
+    DESTINATION ${NETHACK_INSTALL}
+    COMPONENT NoitaNetHack
 )
 
 install(
@@ -291,5 +329,6 @@ install(
         ${CMAKE_CURRENT_BINARY_DIR}/epitaph
         ${CMAKE_CURRENT_BINARY_DIR}/bogusmon
         ${CMAKE_CURRENT_BINARY_DIR}/options
-    DESTINATION .
+    DESTINATION ${NETHACK_INSTALL}
+    COMPONENT NoitaNetHack
 )

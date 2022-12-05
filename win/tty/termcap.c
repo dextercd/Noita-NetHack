@@ -572,7 +572,10 @@ xputc(int c) /* actually char, but explicitly specify its widened type */
      * Matching putchar()'s declaration and using explicit casts where
      * warranted is more robust, so we're just a jacket around that.
      */
-    return putchar(c);
+    int ret = putchar(c);
+
+    (void) fflush(stdout);
+    return ret;
 }
 
 void

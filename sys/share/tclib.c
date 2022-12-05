@@ -32,7 +32,7 @@ void tputs(const char *, int, int (*)(int));
 /* local support data */
 static char tc_entry[] =
 ":am:bs:km:mi:ms:xn:"
-":co#80:it#8:li#24:"
+":co#90:it#8:li#30:"
 ":AL=\\E[%dL:DC=\\E[%dP:DL=\\E[%dM:DO=\\E[%dB:IC=\\E[%d@:"
 ":K1=\\EOw:K2=\\EOy:K3=\\EOu:K4=\\EOq:K5=\\EOs:LE=\\E[%dD:"
 ":RI=\\E[%dC:UP=\\E[%dA:ae=^O:al=\\E[L:as=^N:bl=^G:bt=\\E[Z:"

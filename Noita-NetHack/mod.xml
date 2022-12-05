@@ -1,0 +1,5 @@
+<Mod
+    name="Noita NetHack"
+    description="Play NetHack from within Noita!"
+    request_no_api_restrictions="1"
+/>
