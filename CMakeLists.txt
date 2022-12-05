@@ -35,17 +35,6 @@ FetchContent_Declare(MinHook
 FetchContent_MakeAvailable(MinHook)
 
 
-FetchContent_Declare(luajitminhook
-    URL https://github.com/dextercd/LuaJIT-MinHook/releases/download/release-1.1.1/LuaJIT-MinHook-1.1.1.zip
-)
-FetchContent_MakeAvailable(luajitminhook)
-
-install(DIRECTORY ${luajitminhook_SOURCE_DIR}/
-    DESTINATION ${ROOT}/libs/minhook
-    COMPONENT NoitaNetHack
-)
-
-
 add_subdirectory(noita)
 
 # alloc library

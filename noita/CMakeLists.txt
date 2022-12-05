@@ -14,6 +14,7 @@ add_executable(nhnoita
 target_link_libraries(nhnoita PRIVATE process-manager)
 
 install(TARGETS process-manager
+    RUNTIME
     DESTINATION ${ROOT}
     COMPONENT NoitaNetHack
 )
