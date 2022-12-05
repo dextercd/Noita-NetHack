@@ -23,7 +23,7 @@ endif()
 
 FetchContent_Declare(katerm
     GIT_REPOSITORY https://github.com/dextercd/katerm.git
-    GIT_TAG 474c06edf5ba1a17be8639c7a2fce32e5e132f96
+    GIT_TAG 25f69f9d411bba29c43734e1a42dd472117a54f9
 )
 FetchContent_MakeAvailable(katerm)
 
