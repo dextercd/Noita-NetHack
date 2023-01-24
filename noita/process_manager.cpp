@@ -437,3 +437,15 @@ void procman_clear_changed()
 {
     terminal.screen.clear_changes();
 }
+
+extern "C" __declspec(dllexport)
+int procman_cursor_x()
+{
+    return terminal.cursor.pos.x;
+}
+
+extern "C" __declspec(dllexport)
+int procman_cursor_y()
+{
+    return terminal.cursor.pos.y;
+}

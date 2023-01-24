@@ -37,7 +37,8 @@ bool procman_line_changed(int linenr);
 const char* procman_glyph_at(int x, int y);
 void procman_colour_at(int x, int y, struct colour* ret);
 void procman_clear_changed();
-
+int procman_cursor_x();
+int procman_cursor_y();
 ]])
 
 local pm = ffi.load("mods/Noita-NetHack/process-manager.dll")
@@ -148,6 +149,9 @@ function OnWorldPreUpdate()
         terminal_width * mono_width, mono_height * terminal_height
     )
 
+    local cursor_x = pm.procman_cursor_x()
+    local cursor_y = pm.procman_cursor_y()
+
     fetch_terminal_changes()
     for linenr=1, #lines do
         local line = lines[linenr]
@@ -165,13 +169,21 @@ function OnWorldPreUpdate()
                 local ch = string.sub(text, ti, ti)
 
                 local x = character_index * mono_width
+                local x_adjust = 0
+
                 if ch == '$' then
                     ch = ' ' .. ch
-                    x = x - font_space_width
+                    x_adjust = -font_space_width
                 end
 
                 GuiColorSetForNextWidget(gui, fr, fg, fb, 1)
-                GuiText(gui, x + offsetx, y + offsety, ch)
+                GuiText(gui, x + offsetx + x_adjust, y + offsety, ch)
+
+                if cursor_x == character_index and cursor_y == linenr - 1 then
+                    GuiColorSetForNextWidget(gui, 1, 1, 1, .6)
+                    GuiText(gui, x + offsetx - 0.5, y + offsety + 0.2, '_')
+                end
+
 
                 character_index = character_index + 1
             end
